@@ -31,6 +31,12 @@ class PartialParse(object):
         ### Note: The root token should be represented with the string "ROOT"
         ###
 
+        self.stack = ['ROOT']
+        if isinstance(self.sentence, list) or isinstance(self.sentence, tuple):
+            self.buffer = [word for word in sentence]
+        else:
+            self.buffer = self.sentence.split(' ')
+        self.dependencies = []
 
         ### END YOUR CODE
 
@@ -50,6 +56,16 @@ class PartialParse(object):
         ###         2. Left Arc
         ###         3. Right Arc
 
+        if transition == 'S':
+            self.stack.append(self.buffer.pop(0))
+        elif transition == 'LA':
+            dependent = self.stack.pop(-2)
+            head = self.stack[-1]
+            self.dependencies.append((head, dependent))
+        elif transition == 'RA':
+            head = self.stack[-2]
+            dependent = self.stack.pop(-1)
+            self.dependencies.append((head, dependent))
 
         ### END YOUR CODE
 
@@ -101,6 +117,21 @@ def minibatch_parse(sentences, model, batch_size):
     ###             to remove objects from the `unfinished_parses` list. This will free the underlying memory that
     ###             is being accessed by `partial_parses` and may cause your code to crash.
 
+    partial_parses = [PartialParse(sentence) for sentence in sentences]
+    unfinished_parses = partial_parses
+    while len(unfinished_parses) > 0:
+        batch = unfinished_parses[:batch_size]
+        transitions = model.predict(batch)
+        for i, partial_parse in enumerate(batch):
+            partial_parse.parse_step(transitions[i])
+        tmp_unfinished = []
+        for i in range(len(unfinished_parses)):
+            if len(unfinished_parses[i].stack) == 1 and len(unfinished_parses[i].buffer) == 0:
+                continue
+            tmp_unfinished.append(unfinished_parses[i])
+        unfinished_parses = tmp_unfinished
+    for partial_parse in partial_parses:
+        dependencies.append(partial_parse.dependencies)
 
     ### END YOUR CODE
 
