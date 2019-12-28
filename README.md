@@ -14,9 +14,9 @@
   The network json file conatines the information of wifi, the format is as
   follows:
   
-  Wifi:
-      SSID ""
-      Passcode ""
+  Wifi:\
+      SSID ""\
+      Passcode ""\
   
   
   Some issues which may be improved in the future
