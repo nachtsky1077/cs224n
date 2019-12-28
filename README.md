@@ -16,7 +16,7 @@
   
   Wifi:\
       SSID ""\
-      Passcode ""\
+      Passcode ""
   
   
   Some issues which may be improved in the future
