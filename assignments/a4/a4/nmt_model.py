@@ -73,6 +73,9 @@ class NMT(nn.Module):
         ###     Dropout Layer:
         ###         https://pytorch.org/docs/stable/nn.html#torch.nn.Dropout
 
+        self.encoder = nn.LSTM(input_size=embed_size, hidden_size=self.hidden_size, dropout=self.dropout_rate, bidirectional=True)
+        self.decoder = nn.LSTMCell(input_size=embed_size, hidden_size=self.hidden_size, bias=True)
+
 
         ### END YOUR CODE
 
