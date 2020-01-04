@@ -73,6 +73,29 @@ class NMT(nn.Module):
         ###     Dropout Layer:
         ###         https://pytorch.org/docs/stable/nn.html#torch.nn.Dropout
 
+        self.encoder = nn.LSTM(input_size=embed_size,
+                               hidden_size=hidden_size,
+                               bias=True,
+                               bidirectional=True)
+        self.decoder = nn.LSTMCell(input_size=embed_size+hidden_size,
+                                   hidden_size=hidden_size,
+                                   bias=True)
+        self.h_projection = nn.Linear(in_features=hidden_size*2,
+                                      out_features=hidden_size,
+                                      bias=False)
+        self.c_projection = nn.Linear(in_features=hidden_size*2,
+                                      out_features=hidden_size,
+                                      bias=False)
+        self.att_projection = nn.Linear(in_features=hidden_size*2,
+                                        out_features=hidden_size,
+                                        bias=False)
+        self.combined_output_projection = nn.Linear(in_features=hidden_size*3,
+                                                    out_features=hidden_size,
+                                                    bias=False)
+        self.target_vocab_projection = nn.Linear(in_features=hidden_size,
+                                                 out_features=len(vocab.tgt),
+                                                 bias=False)
+        self.dropout = nn.Dropout(p=dropout_rate, inplace=False)
 
         ### END YOUR CODE
 
@@ -139,7 +162,7 @@ class NMT(nn.Module):
         ###     2. Compute `enc_hiddens`, `last_hidden`, `last_cell` by applying the encoder to `X`.
         ###         - Before you can apply the encoder, you need to apply the `pack_padded_sequence` function to X.
         ###         - After you apply the encoder, you need to apply the `pad_packed_sequence` function to enc_hiddens.
-        ###         - Note that the shape of the tensor returned by the encoder is (src_len b, h*2) and we want to
+        ###         - Note that the shape of the tensor returned by the encoder is (src_len, b, h*2) and we want to
         ###           return a tensor of shape (b, src_len, h*2) as `enc_hiddens`.
         ###     3. Compute `dec_init_state` = (init_decoder_hidden, init_decoder_cell):
         ###         - `init_decoder_hidden`:
@@ -163,6 +186,11 @@ class NMT(nn.Module):
         ###     Tensor Permute:
         ###         https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute
 
+        X = self.model_embeddings(source_padded)
+        packed_X = nn.utils.pack_padded_sequence(input=X, lengths=source_lengths)
+        enc_hiddens, (last_hidden, last_cell) = self.encoder(packed_X)
+        enc_hiddens = torch.transpose(enc_hiddens, 0, 1)
+        
 
         ### END YOUR CODE
 
