@@ -195,7 +195,7 @@ class NMT(nn.Module):
         init_decoder_hidden = self.h_projection(torch.cat([last_hidden[0], last_hidden[1]], dim=1))
         init_decoder_cell = self.c_projection(torch.cat([last_cell[0], last_cell[1]], dim=1))
         dec_init_state = (init_decoder_hidden, init_decoder_cell)
-        
+
         ### END YOUR CODE
 
         return enc_hiddens, dec_init_state
@@ -265,6 +265,15 @@ class NMT(nn.Module):
         ###     Tensor Stacking:
         ###         https://pytorch.org/docs/stable/torch.html#torch.stack
 
+        enc_hidden_proj = self.att_projection(enc_hiddens)
+        Y = self.model_embeddings.target(target_padded)
+        for one_step in torch.split(Y, split_size_or_sections=1, dim=0):
+            Y_t = torch.squeeze(one_step)
+            Ybar_t = torch.cat([Y_t, o_prev], dim=1)
+            dec_state, o_t, e_t = self.step(Ybar_t, dec_state, enc_hiddens, enc_hidden_proj, enc_masks)
+            combined_outputs.append(o_t)
+            o_prev = o_t
+        combined_outputs = torch.stack(combined_outputs, dim=0)
 
         ### END YOUR CODE
 
@@ -323,6 +332,9 @@ class NMT(nn.Module):
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/torch.html#torch.squeeze
 
+        dec_state = self.decoder(Ybar_t, dec_state)
+        dec_hidden, dec_cell = dec_state
+        e_t = torch.squeeze(torch.bmm(enc_hiddens_proj, torch.unsqueeze(dec_hidden, 2)), dim=2)
 
         ### END YOUR CODE
 
@@ -358,6 +370,13 @@ class NMT(nn.Module):
         ###     Tanh:
         ###         https://pytorch.org/docs/stable/torch.html#torch.tanh
 
+        alpha_t = nn.functional.softmax(e_t, dim=1)
+        b, src_len, h2 = enc_hiddens.size()
+        #a_t = torch.squeeze(torch.bmm(enc_hiddens.contiguous().view(b, h2, src_len), torch.unsqueeze(alpha_t, 2)), dim=2)
+        a_t = torch.squeeze(torch.bmm(torch.transpose(enc_hiddens, 1, 2), torch.unsqueeze(alpha_t, 2)), dim=2)
+        U_t = torch.cat([a_t, dec_hidden], dim=1)
+        V_t = self.combined_output_projection(U_t)
+        O_t = self.dropout(torch.tanh(V_t))
 
         ### END YOUR CODE
 
