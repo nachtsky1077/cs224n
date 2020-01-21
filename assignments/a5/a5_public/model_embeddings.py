@@ -11,14 +11,15 @@ Michael Hahn <mhahn2@stanford.edu>
 """
 
 import torch.nn as nn
+import torch.functional as F
 
 # Do not change these imports; your module names should be
 #   `CNN` in the file `cnn.py`
 #   `Highway` in the file `highway.py`
 # Uncomment the following two imports once you're ready to run part 1(j)
 
-# from cnn import CNN
-# from highway import Highway
+from cnn import CNN
+from highway import Highway
 
 # End "do not change" 
 
@@ -40,8 +41,10 @@ class ModelEmbeddings(nn.Module):
         ## End A4 code
 
         ### YOUR CODE HERE for part 1j
-
-
+        self.cnn = CNN(e_char=50, e_word=embed_size)
+        self.highway = Highway(e_word=embed_size)
+        pad_token_idx = vocab.src['<pad>']
+        self.embeddings = nn.Embedding(len(vocab.src), embed_size, padding_idx=pad_token_idx)
         ### END YOUR CODE
 
     def forward(self, input):
@@ -59,7 +62,8 @@ class ModelEmbeddings(nn.Module):
         ## End A4 code
 
         ### YOUR CODE HERE for part 1j
-
-
+        output = self.highway(self.cnn(input))
+        output = F.dropout(output, p=0.3)
+        return output
         ### END YOUR CODE
 
