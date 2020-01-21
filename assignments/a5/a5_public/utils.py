@@ -54,7 +54,6 @@ def pad_sents_char(sents, char_pad_token):
                 sents_padded.append(word[:max_word_length])
             else:
                 sents_padded.append(word.extend([char_pad_token]*(max_word_length-len(word))))
-    return sents_padded
     
     ### END YOUR CODE
 

@@ -12,7 +12,6 @@ Michael Hahn <mhahn2@stanford.edu>
 
 import torch.nn as nn
 import torch.functional as F
-
 # Do not change these imports; your module names should be
 #   `CNN` in the file `cnn.py`
 #   `Highway` in the file `highway.py`
