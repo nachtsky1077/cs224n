@@ -1,2 +1,1 @@
-# cs224n
-notes, slides, assignments and starter code for cs224n
+# Notes, slides and starter code for cs224n
